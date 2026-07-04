@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+# arxos-welcome - post-login welcome splash for ArxOS.
+# JARVIS-toned greeting + live time + a rotating motivation/productivity fact, in the
+# ArxOS greeter/site design (Inter + Playfair Display, gold accent, animated 3D plexus,
+# flat segmented loader). NO network on the login path (performance first): 20 facts ship
+# built-in and show instantly. A detached background job adds ~5 fresh facts once a day,
+# only when the network is up - it never blocks login.
+import os, sys, html, datetime, tempfile, subprocess, json, random
+os.environ.setdefault("WEBKIT_DISABLE_COMPOSITING_MODE", "1")
+os.environ.setdefault("GDK_BACKEND", "x11")
+
+VERSION = "0.0.1"
+
+# 20 built-in motivation + productivity facts (offline, always available)
+FACTS = [
+    "The best way to get started is to quit talking and begin doing.",
+    "Focus is saying no to a thousand good ideas.",
+    "Discipline is choosing between what you want now and what you want most.",
+    "Small daily improvements are the key to staggering long-term results.",
+    "You don't have to be great to start, but you have to start to be great.",
+    "Deep work is focus without distraction on a cognitively demanding task.",
+    "A 25-minute focused sprint beats an hour of divided attention.",
+    "Done is better than perfect.",
+    "Energy, not time, is your most valuable resource.",
+    "The two-minute rule: if it takes less than two minutes, do it now.",
+    "Motivation gets you going; habit keeps you growing.",
+    "Clarity about what matters brings clarity about what does not.",
+    "You will not always be motivated, so learn to be disciplined.",
+    "The secret of getting ahead is getting started.",
+    "Single-tasking is a superpower in an age of distraction.",
+    "Rest is not idleness; recovery is part of the work.",
+    "What gets measured gets managed.",
+    "Slow is smooth, and smooth is fast.",
+    "Your future is created by what you do today, not tomorrow.",
+    "Consistency compounds. Show up.",
+]
+
+def _cache_dir():
+    d = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "arxos")
+    os.makedirs(d, exist_ok=True); return d
+
+def load_facts():
+    pool = list(FACTS)
+    try:
+        pool += json.load(open(os.path.join(_cache_dir(), "facts.json")))
+    except Exception:
+        pass
+    return pool or list(FACTS)
+
+def refresh_facts():
+    # runs detached, after login, ONLY when online, at most once a day; best-effort.
+    stamp = os.path.join(_cache_dir(), "facts.stamp")
+    today = datetime.date.today().isoformat()
+    try:
+        if os.path.exists(stamp) and open(stamp).read().strip() == today:
+            return
+    except Exception:
+        pass
+    try:
+        import urllib.request
+        req = urllib.request.Request("https://zenquotes.io/api/quotes",
+                                     headers={"User-Agent": "curl/8"})
+        data = json.load(urllib.request.urlopen(req, timeout=6))
+        picks = random.sample(data, min(5, len(data)))
+        new = [("%s  -  %s" % (q.get("q", "").strip(), q.get("a", "").strip())).strip()
+               for q in picks if q.get("q")]
+    except Exception:
+        return   # no network / API down: keep the built-ins, try again tomorrow
+    cf = os.path.join(_cache_dir(), "facts.json")
+    try: pool = json.load(open(cf))
+    except Exception: pool = []
+    for f in new:
+        if f and f not in pool: pool.append(f)
+    pool = pool[-120:]
+    try:
+        json.dump(pool, open(cf, "w")); open(stamp, "w").write(today)
+    except Exception:
+        pass
+
+def greeting():
+    h = datetime.datetime.now().hour
+    if   5 <= h < 12: return "Good morning"
+    elif 12 <= h < 17: return "Good afternoon"
+    elif 17 <= h < 22: return "Good evening"
+    else:              return "Working late"
+
+PAGE = """<!doctype html><html><head><meta charset="utf-8"><style>
+:root{--accent:#e8702a;--fg:#fff;--muted:rgba(255,255,255,.7);--dim:rgba(255,255,255,.45);--gold:#cdb892}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;cursor:none}
+html,body{height:100%%;overflow:hidden;background:#000;color:var(--fg);font-family:'Inter',sans-serif;letter-spacing:-.02em}
+.pf{font-family:'Playfair Display',serif;font-style:italic;font-weight:500}
+#bg{position:fixed;inset:0;z-index:0}
+.vig{position:fixed;inset:0;z-index:1;background:radial-gradient(120%% 90%% at 50%% 45%%,transparent 30%%,rgba(0,0,0,.72) 100%%)}
+.c{position:relative;z-index:2;height:100%%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:0 6vw}
+.hi{font-size:clamp(2.4rem,6vw,4.4rem);line-height:1.05;animation:rise 1s cubic-bezier(.16,1,.3,1) both}
+.hi .pf{color:var(--accent)}
+.fact{max-width:620px;font-size:clamp(.9rem,1.7vw,1.15rem);color:var(--gold);line-height:1.5;animation:rise 1s .14s both}
+.meta{margin-top:6px;font-size:.9rem;color:var(--dim);letter-spacing:.06em;animation:rise 1s .26s both}
+.info{margin-top:2px;font-size:.7rem;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;opacity:.82;animation:rise 1s .32s both}
+.loader{display:flex;gap:5px;margin:30px auto 0;justify-content:center;animation:rise 1s .36s both}
+.loader i{width:17px;height:5px;border-radius:2px;background:rgba(232,112,42,.16);animation:seg 1.5s ease-in-out infinite}
+@keyframes seg{0%%,100%%{background:rgba(232,112,42,.16)}50%%{background:var(--accent);box-shadow:0 0 9px rgba(232,112,42,.6)}}
+.brand{position:fixed;bottom:34px;left:0;right:0;z-index:2;text-align:center;font-size:.72rem;letter-spacing:.4em;text-transform:uppercase;color:var(--accent);animation:rise 1s .46s both}
+body.out{animation:fade .6s ease forwards}
+@keyframes rise{from{opacity:0;transform:translateY(26px);filter:blur(10px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes fade{to{opacity:0}}
+</style></head><body>
+<canvas id="bg"></canvas><div class="vig"></div>
+<div class="c">
+  <div class="hi"><span class="pf">%(greet)s.</span></div>
+  <div class="fact pf">%(fact)s</div>
+  <div class="meta"><span id="time"></span></div>
+  <div class="info">%(info)s</div>
+  <div class="loader" id="loader"></div>
+</div>
+<div class="brand">Arx&#8202;OS</div>
+<script>
+(function(){var c=document.getElementById('bg'),x=c.getContext('2d'),W,H,D=Math.min(devicePixelRatio||1,2);
+function s(){W=c.width=innerWidth*D;H=c.height=innerHeight*D;}s();addEventListener('resize',s);
+var N=80,R=1.15,P=[],ry=0;for(var i=0;i<N;i++){var u=Math.random()*2-1,t=Math.random()*6.28,q=Math.sqrt(1-u*u);
+P.push({x:q*Math.cos(t)*R*(.4+Math.random()*.6),y:u*R*(.5+Math.random()*.5),z:q*Math.sin(t)*R*(.4+Math.random()*.6),
+vx:(Math.random()-.5)*7e-4,vy:(Math.random()-.5)*7e-4,vz:(Math.random()-.5)*7e-4});}
+function pr(p){var cy=Math.cos(ry),sy=Math.sin(ry),rx=Math.sin(ry*.4)*.18,cx=Math.cos(rx),sx=Math.sin(rx);
+var X=p.x*cy-p.z*sy,Z=p.x*sy+p.z*cy,Y=p.y*cx-Z*sx;Z=p.y*sx+Z*cx;var sc=2.4/(2.4+Z+1.6);
+return{sx:W/2+X*sc*H*.5,sy:H/2+Y*sc*H*.5,s:sc};}
+function f(){ry+=.0016;x.clearRect(0,0,W,H);var A=[];for(var i=0;i<N;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;p.z+=p.vz;
+if(Math.abs(p.x)>R)p.vx*=-1;if(Math.abs(p.y)>R)p.vy*=-1;if(Math.abs(p.z)>R)p.vz*=-1;A.push(pr(p));}
+for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var a=A[i],b=A[j],d=Math.hypot(a.sx-b.sx,a.sy-b.sy),l=150*D;
+if(d<l){x.strokeStyle='rgba(232,112,42,'+((1-d/l)*.5*Math.min(a.s,b.s)).toFixed(3)+')';x.lineWidth=D*.7;
+x.beginPath();x.moveTo(a.sx,a.sy);x.lineTo(b.sx,b.sy);x.stroke();}}
+for(var i=0;i<N;i++){var q=A[i];x.fillStyle='rgba(255,'+Math.floor(150+q.s*60)+',90,'+Math.min(1,q.s*.9).toFixed(3)+')';
+x.beginPath();x.arc(q.sx,q.sy,Math.max(.4,q.s*2.1)*D,0,7);x.fill();}requestAnimationFrame(f);}f();})();
+function tk(){var d=new Date();document.getElementById('time').textContent=
+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'  \\u00b7  '+d.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});}
+tk();setInterval(tk,1000);
+(function(){var L=document.getElementById('loader'),n=16;for(var i=0;i<n;i++){var e=document.createElement('i');
+e.style.animationDelay=(i*0.075).toFixed(3)+'s';L.appendChild(e);}})();
+setTimeout(function(){document.body.classList.add('out');},4600);
+</script></body></html>"""
+
+def sysinfo():
+    # local, non-network system facts for the info line
+    bits = ["ArxOS %s" % VERSION]
+    try: bits.append("kernel " + os.uname().release.split("-")[0])
+    except Exception: pass
+    try:
+        c = os.cpu_count()
+        if c: bits.append("%d cores" % c)
+    except Exception: pass
+    try:
+        kb = int(next(l.split()[1] for l in open("/proc/meminfo") if l.startswith("MemTotal")))
+        bits.append("%d GB RAM" % round(kb / 1048576))
+    except Exception: pass
+    return "  ·  ".join(bits)
+
+def build():
+    return PAGE % {"greet": html.escape(greeting()),
+                   "fact": html.escape(random.choice(load_facts())),
+                   "info": html.escape(sysinfo())}
+
+def show_splash():
+    import gi
+    gi.require_version("Gtk", "3.0")
+    try: gi.require_version("WebKit2", "4.1")
+    except Exception: gi.require_version("WebKit2", "4.0")
+    from gi.repository import Gtk, WebKit2, GLib, Gdk
+
+    class Splash(Gtk.Window):
+        def __init__(self):
+            super().__init__(type=Gtk.WindowType.TOPLEVEL)
+            self.set_decorated(False); self.set_skip_taskbar_hint(True)
+            self.set_skip_pager_hint(True); self.set_keep_above(True); self.fullscreen()
+            # black from the very first frame, so no wallpaper ever shows through
+            # (the window + the webview are both black before the page paints)
+            self.set_app_paintable(True)
+            try:
+                _css = Gtk.CssProvider(); _css.load_from_data(b"window, scrolledwindow, webkitwebview { background:#000; }")
+                Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), _css,
+                                                         Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            except Exception:
+                pass
+            self._tmp = tempfile.NamedTemporaryFile("w", suffix=".html", delete=False)
+            self._tmp.write(build()); self._tmp.close()
+            wv = WebKit2.WebView()
+            try: wv.set_background_color(Gdk.RGBA(0, 0, 0, 1))
+            except Exception: pass
+            wv.load_uri("file://" + self._tmp.name)
+            self.add(wv)
+            self.connect("destroy", self._quit)
+            GLib.timeout_add(5600, self._quit)
+        def _quit(self, *a):
+            try: os.unlink(self._tmp.name)
+            except Exception: pass
+            Gtk.main_quit(); return False
+
+    w = Splash(); w.show_all(); w.present(); Gtk.main()
+
+if __name__ == "__main__":
+    if "--version" in sys.argv or "-V" in sys.argv:
+        print("arxos-welcome %s (ArxOS)" % VERSION); sys.exit(0)
+    if "--refresh-facts" in sys.argv:
+        refresh_facts(); sys.exit(0)
+    # kick off the daily fact refresh in the background (detached; never blocks the splash)
+    try:
+        subprocess.Popen(["setsid", sys.executable, os.path.realpath(__file__), "--refresh-facts"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    except Exception:
+        pass
+    show_splash()

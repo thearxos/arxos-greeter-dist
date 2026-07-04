@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArxOS</title>
+<style>
+:root{
+  --accent:#e8702a; --accent-hi:#d2611f; --bg:#000; --fg:#fff;
+  --muted:rgba(255,255,255,.7); --dim:rgba(255,255,255,.45);
+  --card:rgba(255,255,255,.05); --card-br:rgba(255,255,255,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
+  font-family:'Inter','Segoe UI',sans-serif;letter-spacing:-.02em}
+.pf{font-family:'Playfair Display',serif;font-style:italic;font-weight:500}
+#bg{position:fixed;inset:0;z-index:0;display:block}
+.vig{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 38%,transparent 32%,rgba(0,0,0,.72) 100%),
+             linear-gradient(180deg,rgba(0,0,0,.4),transparent 26%,transparent 68%,rgba(0,0,0,.55))}
+.wrap{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:24px;perspective:1300px}
+.brand{text-align:center;animation:rise .9s cubic-bezier(.16,1,.3,1) both}
+.brand .logo{font-size:clamp(3rem,8vw,5.4rem);font-weight:800;letter-spacing:-.045em;line-height:1;
+  text-shadow:0 6px 40px rgba(232,112,42,.25)}
+.brand .logo .pf{color:var(--accent)}
+.brand .tag{margin-top:12px;font-size:.72rem;letter-spacing:.36em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.clock{font-size:1.45rem;color:var(--muted);animation:rise .9s .08s both}
+.card{width:min(92vw,382px);background:rgba(12,12,14,.72);border:1px solid var(--card-br);
+  border-radius:22px;
+  padding:30px 28px;box-shadow:0 34px 100px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.06);
+  animation:rise .9s .18s both;transform-style:preserve-3d;will-change:transform}
+.user{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.avatar{width:54px;height:54px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  font-size:23px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--accent),#7d3510);
+  box-shadow:0 0 0 1px rgba(232,112,42,.45),0 10px 26px rgba(232,112,42,.32)}
+.uname{font-size:1.16rem;font-weight:700;line-height:1.1}
+.urole{font-size:.7rem;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;margin-top:3px}
+.field{position:relative;margin-bottom:15px}
+input[type=password]{width:100%;padding:14px 16px;background:rgba(0,0,0,.42);
+  border:1px solid var(--card-br);border-radius:13px;color:#fff;font-family:inherit;
+  font-size:.95rem;outline:none;transition:.25s}
+input::placeholder{color:var(--dim)}
+input:focus{border-color:var(--accent);background:rgba(0,0,0,.55);box-shadow:0 0 0 3px rgba(232,112,42,.16)}
+.btn{width:100%;padding:14px;border:0;border-radius:13px;background:var(--accent);color:#fff;
+  font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer;transition:.25s}
+.btn:hover{background:var(--accent-hi);transform:translateY(-1px);box-shadow:0 14px 32px rgba(232,112,42,.36)}
+.btn:active{transform:translateY(0)}
+.msg{min-height:18px;margin-top:13px;text-align:center;font-size:.82rem;color:var(--accent);letter-spacing:.02em}
+.msg.err{color:#ff6b6b;animation:shake .4s}
+.sess{position:fixed;bottom:26px;left:30px;z-index:3;animation:rise .9s .36s both}
+.sess select{background:rgba(255,255,255,.06);border:1px solid var(--card-br);color:var(--muted);
+  border-radius:11px;padding:9px 13px;font-family:inherit;font-size:.8rem;outline:none;cursor:pointer}
+.power{position:fixed;bottom:26px;right:30px;z-index:3;display:flex;gap:10px;animation:rise .9s .36s both}
+.power button{width:46px;height:46px;border-radius:50%;border:1px solid var(--card-br);
+  background:rgba(255,255,255,.06);color:var(--muted);cursor:pointer;font-size:1.05rem;
+  display:grid;place-items:center;transition:.2s}
+.power button:hover{background:var(--accent);color:#fff;border-color:var(--accent);transform:translateY(-2px)}
+@keyframes rise{from{opacity:0;transform:translateY(28px);filter:blur(10px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}60%{transform:translateX(9px)}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="vig"></div>
+
+<div class="wrap">
+  <div class="brand"><div class="logo">Arx<span class="pf">OS</span></div>
+    <div class="tag">A citadel, armed</div></div>
+  <div class="clock" id="clock"></div>
+  <form class="card" id="card" autocomplete="off">
+    <div class="user">
+      <div class="avatar" id="avatar">A</div>
+      <div><div class="uname" id="uname">ArxOS</div><div class="urole">administrator</div></div>
+    </div>
+    <div class="field"><input type="password" id="pw" placeholder="Password" autofocus></div>
+    <button class="btn" type="submit">Unlock</button>
+    <div class="msg" id="msg"></div>
+  </form>
+</div>
+
+<div class="sess"><select id="sess"></select></div>
+<div class="power">
+  <button title="Suspend" data-act="suspend">&#9790;</button>
+  <button title="Restart" data-act="restart">&#8635;</button>
+  <button title="Shutdown" data-act="shutdown">&#9211;</button>
+</div>
+
+<script>
+/* ---------- 3D plexus background (canvas 2D, real 3D projection) ---------- */
+(function(){
+  var c=document.getElementById('bg'), x=c.getContext('2d'), W,H,DPR=Math.min(devicePixelRatio||1,2);
+  function size(){W=c.width=innerWidth*DPR;H=c.height=innerHeight*DPR;c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';}
+  size(); addEventListener('resize',size);
+  var N=64, R=1.15, pts=[], foc=2.4, ry=0, rx=0, mx=0, my=0, tmx=0, tmy=0, running=true, last=0, iv=1000/30;
+  for(var i=0;i<N;i++){
+    var u=Math.random()*2-1, t=Math.random()*Math.PI*2, s=Math.sqrt(1-u*u);
+    pts.push({x:s*Math.cos(t)*R*(.4+Math.random()*.6), y:u*R*(.4+Math.random()*.6),
+              z:s*Math.sin(t)*R*(.4+Math.random()*.6),
+              vx:(Math.random()-.5)*.0006, vy:(Math.random()-.5)*.0006, vz:(Math.random()-.5)*.0006});
+  }
+  addEventListener('mousemove',function(e){tmx=(e.clientX/innerWidth-.5); tmy=(e.clientY/innerHeight-.5);});
+  function frame(ts){
+    if(!running) return;
+    requestAnimationFrame(frame);
+    if(ts && ts-last<iv) return;   // throttle drawing to ~30fps so the main thread stays free for keystrokes
+    last=ts||0;
+    ry+=0.0016; rx=Math.sin(ry*.4)*.18; mx+=(tmx-mx)*.04; my+=(tmy-my)*.04;
+    rx+=my*.5; var addy=mx*.6;
+    x.clearRect(0,0,W,H);
+    var P=[];
+    for(var i=0;i<N;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;p.z+=p.vz;
+      if(Math.abs(p.x)>R)p.vx*=-1; if(Math.abs(p.y)>R)p.vy*=-1; if(Math.abs(p.z)>R)p.vz*=-1;
+      var q=projM(p,addy); P.push(q);}
+    var lim=150*DPR, lim2=lim*lim;
+    for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){
+      var a=P[i],b=P[j], dx=a.sx-b.sx, dy=a.sy-b.sy, d2=dx*dx+dy*dy;   // squared distance: skip the sqrt on the many out-of-range pairs
+      if(d2<lim2){var d=Math.sqrt(d2), al=(1-d/lim)*0.5*Math.min(a.s,b.s);
+        x.strokeStyle='rgba(232,112,42,'+al.toFixed(3)+')'; x.lineWidth=DPR*.7;
+        x.beginPath();x.moveTo(a.sx,a.sy);x.lineTo(b.sx,b.sy);x.stroke();}
+    }
+    for(var i=0;i<N;i++){var q=P[i], r=Math.max(.4,q.s*2.1)*DPR, al=Math.min(1,q.s*.9);
+      x.fillStyle='rgba(255,'+Math.floor(150+q.s*60)+',90,'+al.toFixed(3)+')';
+      x.beginPath();x.arc(q.sx,q.sy,r,0,7);x.fill();}
+  }
+  // let the auth flow pause the background so keystrokes + the unlock get the whole CPU
+  window.__bg={stop:function(){running=false;},start:function(){if(!running){running=true;last=0;requestAnimationFrame(frame);}}};
+  function projM(p,addy){
+    var yy=ry+addy, cy=Math.cos(yy),sy=Math.sin(yy),cx=Math.cos(rx),sx=Math.sin(rx);
+    var X=p.x*cy - p.z*sy, Z=p.x*sy + p.z*cy, Y=p.y*cx - Z*sx; Z=p.y*sx + Z*cx;
+    var sc=foc/(foc+Z+1.6);
+    return {sx:W/2 + X*sc*H*.5, sy:H/2 + Y*sc*H*.5, s:sc, z:Z};
+  }
+  requestAnimationFrame(frame);
+})();
+/* ---------- lock-screen hardening: block context menu / drag / devtools / navigation ---------- */
+(function(){
+  var stop=function(e){e.preventDefault(); e.stopPropagation();};
+  document.addEventListener('contextmenu', stop, true);
+  document.addEventListener('dragstart', stop, true);
+  document.addEventListener('drop', stop, true);
+  document.addEventListener('selectstart', stop, true);
+  document.addEventListener('keydown', function(e){
+    var k=e.key;
+    if(k==='F5'||k==='F12'||
+       (e.ctrlKey&&(k==='r'||k==='R'||k==='u'||k==='U'||k==='p'||k==='P'||k==='s'||k==='S'))||
+       (e.ctrlKey&&e.shiftKey&&(k==='I'||k==='J'||k==='C'||k==='K'))) stop(e);
+  }, true);
+})();
+
+/* ---------- login card mouse tilt (3D) ---------- */
+(function(){
+  var card=document.getElementById('card');
+  addEventListener('mousemove',function(e){
+    var rx=(e.clientY/innerHeight-.5)*-6, ry=(e.clientX/innerWidth-.5)*6;
+    card.style.transform='rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)';
+  });
+})();
+
+/* ---------- clock ---------- */
+function tick(){var d=new Date();
+  document.getElementById('clock').textContent=
+    d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'  ·  '+
+    d.toLocaleDateString([], {weekday:'long', day:'numeric', month:'long'});
+}
+tick(); setInterval(tick,1000);
+
+/* ---------- LightDM auth ---------- */
+var MSG=document.getElementById('msg'), PW=document.getElementById('pw'),
+    CARD=document.getElementById('card'), USER='arxos';
+function setMsg(t,err){MSG.textContent=t||''; MSG.className='msg'+(err?' err':'');}
+
+function initGreeter(){
+  try{
+    if(typeof lightdm==='undefined'){return;}
+    // pick the real user + its display name / avatar
+    if(lightdm.users && lightdm.users.length){
+      var u=lightdm.users[0]; USER=u.username||USER;
+      document.getElementById('uname').textContent=u.display_name||u.username||'ArxOS';
+      document.getElementById('avatar').textContent=(u.display_name||u.username||'A').charAt(0).toUpperCase();
+    }
+    // sessions
+    var sel=document.getElementById('sess');
+    (lightdm.sessions||[]).forEach(function(s){var o=document.createElement('option');
+      o.value=s.key; o.textContent=s.name; sel.appendChild(o);});
+    if(lightdm.default_session) sel.value=lightdm.default_session;
+    if(!sel.options.length){var o=document.createElement('option');o.value='xfce';o.textContent='Xfce';sel.appendChild(o);}
+  }catch(e){}
+}
+
+var ROASTS=['nah that ain\'t it chief, run it back','skill issue detected: wrong password',
+  'oh the mighty have fallen again, lock in twin','wrong password? as if','that password is so 1999, try again',
+  'sir this is a shell, not a guessing game','womp womp, that password was mid','aura -1000, re-enter the password',
+  'you had ONE job: the password','I\'m not mad, just disappointed','d\'oh, wrong password',
+  'the vibes are off and so is your password','certified L, try that password again',
+  'adulting is hard and so is your password','talk to the hand, that password is wrong'];
+function beginAuth(){
+  setMsg('');
+  if(window.__bg) window.__bg.stop();   // free the whole CPU for the unlock
+  try{ lightdm.authenticate(USER); }catch(e){ setMsg('greeter error',true); }
+}
+CARD.addEventListener('submit',function(ev){
+  ev.preventDefault();
+  window.__pw=PW.value;
+  beginAuth();          // -> show_prompt -> respond
+});
+
+// LightDM callbacks (global)
+window.show_prompt=function(text,type){
+  try{ lightdm.respond(window.__pw!=null?window.__pw:PW.value); }catch(e){ setMsg('auth error',true); }
+};
+window.show_message=function(text,type){ if(text) setMsg(text, (type==='error'||/fail|incorrect|denied/i.test(text))); };
+window.authentication_complete=function(){
+  if(lightdm.is_authenticated){
+    setMsg('Welcome');
+    var s=document.getElementById('sess').value||lightdm.default_session||'xfce';
+    try{ lightdm.login(lightdm.authentication_user||USER, s); }
+    catch(e){ try{ lightdm.start_session_sync(s); }catch(e2){} }
+  }else{
+    setMsg(ROASTS[Math.floor(Math.random()*ROASTS.length)], true);
+    PW.value=''; PW.focus();
+    CARD.style.transform='';
+    if(window.__bg) window.__bg.start();
+  }
+};
+window.autologin_timer_expired=function(){};
+
+// power buttons
+Array.prototype.forEach.call(document.querySelectorAll('.power button'),function(b){
+  b.addEventListener('click',function(){var a=b.getAttribute('data-act');
+    try{ lightdm[a](); }catch(e){} });
+});
+
+if(document.readyState!=='loading') initGreeter();
+else document.addEventListener('DOMContentLoaded', initGreeter);
+window.addEventListener('GreeterReady', initGreeter);
+</script>
+</body>
+</html>
