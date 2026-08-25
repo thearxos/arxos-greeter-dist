@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Light Locker
+Comment=Lock the session to the ARXOS greeter
+Exec=light-locker --lock-on-suspend --lock-on-lid --lock-after-screensaver=5
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

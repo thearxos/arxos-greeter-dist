@@ -1,47 +1,38 @@
-<div align="center">
+# arxos-greeter
 
-# ArxOS Greeter
+The ARXOS login screen. It is one greeter that does three jobs:
 
-A LightDM greeter and post-login welcome splash for **ArxOS**, matching the ArxOS
-site 100%: Inter + Playfair Display, the gold `#e8702a` accent, a dark canvas, an
-animated **3D plexus**, and reveal animations. The greeter doubles as the lock
-screen (via light-locker).
+- It is the login screen. LightDM shows it when the computer starts.
+- It is the lock screen. light-locker locks the session back to this greeter.
+- It is the default login for every user: the live user, users the installer
+  creates, and users you create later.
 
-</div>
-
-![greeter](screenshots/greeter.png)
-
-## What's inside
-
-- **`themes/arxos/`** - a `lightdm-webkit2-greeter` theme (pure HTML/CSS/JS, no build).
-  Animated 3D plexus background, a glass login card, session + power controls, a live
-  clock. Wired to the LightDM webkit auth API (`authenticate → respond → login`).
-- **`arxos-welcome`** - a post-login splash (WebKit2GTK). A JARVIS-toned, time-aware
-  greeting with the live time, local weather, and a flat segmented (Plymouth-style)
-  loader. Auto-closes after a few seconds.
-
-![welcome](screenshots/welcome.png)
+It uses the stable `lightdm-gtk-greeter`, themed for ARXOS. It replaces the old
+webkit greeter, which failed logins.
 
 ## Install
 
 ```bash
-sudo ./install.sh
+sudo bash install.sh
+sudo systemctl restart lightdm   # applies now. this ends the current session.
 ```
 
-Then log out or `systemctl restart lightdm`.
+The installer is idempotent. You can run it again with no harm.
 
-### Requirements
+## What it sets
 
-`lightdm`, `lightdm-webkit2-greeter`, `light-locker` (for the matching lock screen),
-`python-gobject` + `webkit2gtk` (for the welcome splash), and the fonts **Inter**
-(`inter-font`) and **Playfair Display** for the exact typography.
+- Packages: `lightdm`, `lightdm-gtk-greeter`, `light-locker`.
+- Greeter config: `/etc/lightdm/lightdm-gtk-greeter.conf` (dark theme, ARXOS
+  background, clock, session picker, power controls).
+- LightDM default greeter: `/etc/lightdm/lightdm.conf.d/10-arxos.conf`.
+- Lock screen for all users: `light-locker` autostart in `/etc/xdg/autostart`
+  and in `/etc/skel`, so new users get it too.
+- LightDM enabled as the display manager.
 
-## Lock screen
+## Files
 
-With `light-locker` running in the session, locking (`xflock4`, or the panel's lock
-action) switches to LightDM, so the **lock screen is the same greeter** - one design
-for login and lock.
-
-## License
-
-MIT. Part of **ArxOS** (github.com/thearxos).
+| Path | Purpose |
+|---|---|
+| `install.sh` | Installer |
+| `data/lightdm-gtk-greeter.conf` | The greeter appearance |
+| `data/autostart/light-locker.desktop` | Locks the session to the greeter |
