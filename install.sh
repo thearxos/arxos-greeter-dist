@@ -28,6 +28,11 @@ else
   if [ -n "$SRC" ]; then install -m644 "$SRC" "$BG"; else BG=""; fi
 fi
 
+log "greeter GTK theme (ARXOS branding)"
+install -d /usr/share/themes
+rm -rf /usr/share/themes/ARXOS-Greeter
+cp -rfT "$HERE/data/themes/ARXOS-Greeter" /usr/share/themes/ARXOS-Greeter
+
 log "greeter config"
 install -Dm644 "$HERE/data/lightdm-gtk-greeter.conf" /etc/lightdm/lightdm-gtk-greeter.conf
 # kora icons are optional; fall back to Adwaita if they are not present

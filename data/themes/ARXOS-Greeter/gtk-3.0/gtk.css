@@ -1,0 +1,84 @@
+/* ARXOS-Greeter — ARXOS branding for lightdm-gtk-greeter.
+   Base on Adwaita dark, then recolor the greeter surfaces with ARXOS orange. */
+@import url("resource:///org/gnome/adwaita/gtk-contained-dark.css");
+
+@define-color arxos_accent   #e8702a;
+@define-color arxos_accent_hi #d2611f;
+@define-color arxos_bg       #0a0a0c;
+@define-color arxos_card     rgba(14,14,18,0.92);
+@define-color arxos_fg       #ffffff;
+@define-color arxos_muted    rgba(255,255,255,0.65);
+@define-color arxos_line     rgba(255,255,255,0.12);
+
+* { font-family: "Inter", "Noto Sans", sans-serif; }
+
+/* top panel (host, clock, session, power) */
+#panel_window {
+  background-color: rgba(8,8,10,0.85);
+  color: @arxos_fg;
+  border-bottom: 1px solid @arxos_line;
+}
+#panel_window .menubar,
+#panel_window menubar { background: transparent; }
+#panel_window * { color: @arxos_fg; }
+#clock_label { color: @arxos_fg; font-weight: 500; }
+
+/* the login card */
+#login_window,
+#shutdown_window,
+#restart_window {
+  background-color: @arxos_bg;
+  background-image: linear-gradient(180deg, rgba(232,112,42,0.10), transparent 60%);
+  border: 1px solid rgba(232,112,42,0.35);
+  border-radius: 16px;
+  padding: 24px;
+  color: @arxos_fg;
+}
+
+/* text entries (password / username) */
+#login_window entry,
+entry {
+  background-color: rgba(255,255,255,0.05);
+  border: 1px solid @arxos_line;
+  border-radius: 9px;
+  color: @arxos_fg;
+  padding: 9px 12px;
+  caret-color: @arxos_accent;
+}
+#login_window entry:focus,
+entry:focus {
+  border-color: @arxos_accent;
+  box-shadow: 0 0 0 2px rgba(232,112,42,0.28);
+}
+
+/* the Log In and power buttons */
+#login_window button,
+#login_window .text-button {
+  background-color: @arxos_accent;
+  background-image: none;
+  color: @arxos_fg;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 22px;
+  font-weight: 600;
+}
+#login_window button:hover { background-color: @arxos_accent_hi; }
+#login_window button:active { background-color: @arxos_accent_hi; }
+
+/* user / session dropdowns */
+combobox button,
+#user_combobox button,
+#session_menu {
+  background-color: rgba(255,255,255,0.05);
+  border: 1px solid @arxos_line;
+  border-radius: 9px;
+  color: @arxos_fg;
+}
+combobox button:hover { border-color: rgba(232,112,42,0.5); }
+
+/* messages / prompts */
+#login_window label { color: @arxos_muted; }
+label.error, #login_window label.error { color: @arxos_accent; }
+
+/* the power / session icons in the panel */
+#panel_window button:hover { color: @arxos_accent; }
