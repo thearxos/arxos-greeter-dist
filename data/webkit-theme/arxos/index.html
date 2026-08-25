@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ARXOS</title>
+<style>
+:root{
+  --bg:#0a0a0c; --fg:#fff; --muted:rgba(255,255,255,.62);
+  --accent:#e8702a; --accent-hi:#d2611f; --accent-soft:rgba(232,112,42,.14);
+  --card:rgba(14,14,18,.82); --line:rgba(255,255,255,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:"Inter","Noto Sans",sans-serif;color:var(--fg);overflow:hidden;
+  background:#0a0a0c;
+  background-image:
+    radial-gradient(60% 45% at 50% 8%,rgba(232,112,42,.14),transparent 60%),
+    radial-gradient(70% 55% at 50% 120%,rgba(232,112,42,.10),transparent 66%),
+    url("bg.png");
+  background-size:cover;background-position:center;
+}
+.serif{font-family:"Playfair Display","Noto Serif",serif;font-style:italic}
+.grid{position:fixed;inset:0;z-index:0;opacity:.30;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:54px 54px;mask-image:radial-gradient(70% 60% at 50% 42%,#000,transparent 82%)}
+/* the diamond mark */
+.diamond{position:fixed;z-index:0;top:50%;left:50%;transform:translate(-50%,-50%);width:min(70vmin,520px);aspect-ratio:1;pointer-events:none;opacity:.9}
+.diamond .ring{position:absolute;inset:0;border:1px solid rgba(232,112,42,.26);border-radius:22px;transform:rotate(45deg);animation:spin 46s linear infinite}
+.diamond .ring:nth-child(2){inset:12%;border-color:rgba(232,112,42,.16);animation-duration:66s;animation-direction:reverse}
+.diamond .ring:nth-child(3){inset:26%;border-color:rgba(255,255,255,.06);animation-duration:82s}
+.diamond .core{position:absolute;inset:39%;border-radius:50%;background:radial-gradient(circle,rgba(232,112,42,.5),rgba(232,112,42,.04) 70%);filter:blur(6px);animation:pulse 5s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(405deg)}}
+@keyframes pulse{0%,100%{opacity:.6;transform:scale(.94)}50%{opacity:1;transform:scale(1.05)}}
+
+/* top bar */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px;font-size:.82rem;color:var(--muted);background:linear-gradient(180deg,rgba(8,8,10,.55),transparent)}
+.topbar .host{letter-spacing:.06em}
+.topbar .host b{color:var(--fg)}
+#clock{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
+.topbar .right{display:flex;align-items:center;gap:14px}
+.iconbtn{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;padding:4px 6px;border-radius:8px;transition:.2s}
+.iconbtn:hover{color:var(--accent);background:rgba(255,255,255,.06)}
+select.sess{background:rgba(255,255,255,.05);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-family:inherit;font-size:.8rem}
+
+/* center login */
+.stage{position:fixed;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px}
+.brand{text-align:center}
+.brand .name{font-size:clamp(2.4rem,7vw,4.2rem);letter-spacing:-.05em;line-height:1}
+.brand .tag{margin-top:8px;font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--muted)}
+.card{width:min(90vw,360px);background:var(--card);border:1px solid rgba(232,112,42,.32);border-radius:18px;
+  padding:24px;backdrop-filter:blur(14px);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.who{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.who .av{width:44px;height:44px;border-radius:50%;background:var(--accent-soft);border:1px solid rgba(232,112,42,.4);display:grid;place-items:center;color:var(--accent);font-weight:600;font-size:1.1rem}
+#userWrap{flex:1}
+#userLabel{font-size:.95rem;font-weight:600}
+#user{width:100%;margin-top:2px;background:transparent;color:var(--muted);border:0;font-family:inherit;font-size:.8rem;outline:none;cursor:pointer}
+#user option{color:#111}
+.field{position:relative}
+#password{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;color:var(--fg);
+  padding:12px 46px 12px 14px;font-family:inherit;font-size:.95rem;outline:none;transition:.2s}
+#password:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(232,112,42,.26)}
+#password::placeholder{color:rgba(255,255,255,.4)}
+#go{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:8px;
+  background:var(--accent);color:#fff;cursor:pointer;font-size:1rem;transition:.2s}
+#go:hover{background:var(--accent-hi)}
+#msg{min-height:18px;margin-top:12px;font-size:.8rem;color:var(--accent);text-align:center}
+.hint{margin-top:2px;font-size:.72rem;color:rgba(255,255,255,.35);text-align:center}
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<div class="diamond"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="core"></div></div>
+
+<div class="topbar">
+  <div class="host">ARXOS on <b id="host">arxos</b></div>
+  <div id="clock">00:00</div>
+  <div class="right">
+    <select id="session" class="sess" title="Session"></select>
+    <button class="iconbtn" id="btnSleep" title="Suspend">Suspend</button>
+    <button class="iconbtn" id="btnRestart" title="Restart">Restart</button>
+    <button class="iconbtn" id="btnShutdown" title="Shut down">Shut down</button>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="brand">
+    <div class="name">ARXOS</div>
+    <div class="tag">a citadel, armed</div>
+  </div>
+  <form class="card" id="form" autocomplete="off">
+    <div class="who">
+      <div class="av" id="avatar">A</div>
+      <div id="userWrap">
+        <div id="userLabel">Sign in</div>
+        <select id="user"></select>
+      </div>
+    </div>
+    <div class="field">
+      <input id="password" type="password" placeholder="Password" autofocus>
+      <button id="go" type="submit" title="Log in">&#8594;</button>
+    </div>
+    <div id="msg"></div>
+    <div class="hint">Press Enter to log in</div>
+  </form>
+</div>
+
+<script>
+// ---- clock ----
+function tick(){
+  var d=new Date(), p=n=>(n<10?'0':'')+n;
+  document.getElementById('clock').textContent = p(d.getHours())+':'+p(d.getMinutes())+
+    '   '+d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+}
+setInterval(tick,1000); tick();
+
+var $=id=>document.getElementById(id);
+function setMsg(t){ $('msg').textContent=t||''; }
+function selectedUser(){ return $('user').value; }
+function selectedSession(){ return $('session').value || (window.lightdm && lightdm.default_session) || 'default'; }
+function refreshAvatar(){ var u=selectedUser()||'A'; $('avatar').textContent=u.charAt(0).toUpperCase(); $('userLabel').textContent=u; }
+
+function populate(){
+  if(!window.lightdm){ $('user').innerHTML='<option>arxos</option>'; return; }
+  try{ $('host').textContent = lightdm.hostname || 'arxos'; }catch(e){}
+  var us=(lightdm.users||[]);
+  $('user').innerHTML = us.length
+    ? us.map(u=>'<option value="'+u.username+'">'+(u.display_name||u.username)+'</option>').join('')
+    : '<option value="'+(lightdm.authentication_user||'arxos')+'">'+(lightdm.authentication_user||'arxos')+'</option>';
+  var ss=(lightdm.sessions||[]);
+  $('session').innerHTML = ss.map(s=>'<option value="'+(s.key||s.name)+'">'+s.name+'</option>').join('');
+  if(lightdm.default_session) $('session').value=lightdm.default_session;
+}
+
+// ---- auth flow ----
+function beginAuth(){
+  setMsg('');
+  try{ if(lightdm.in_authentication) lightdm.cancel_authentication(); }catch(e){}
+  try{ lightdm.authenticate(selectedUser()); }catch(e){ setMsg('Auth error'); }
+}
+function onPrompt(text,type){ $('password').focus(); }
+function onMessage(text,type){ if(text) setMsg(text); }
+function onAuthComplete(){
+  if(window.lightdm && lightdm.is_authenticated){
+    setMsg('Welcome');
+    try{ lightdm.start_session(selectedSession()); }catch(e){}
+  } else {
+    setMsg('Incorrect password');
+    $('password').value=''; $('password').focus();
+    beginAuth();
+  }
+}
+
+// web-greeter uses lightdm.<signal>.connect(); classic greeters use window.<name>. Support both.
+function wireLightdm(){
+  if(!window.lightdm) return false;
+  var L=lightdm;
+  function conn(sig, fn){
+    try{ if(L[sig] && typeof L[sig].connect==='function'){ L[sig].connect(fn); return; } }catch(e){}
+    window[sig]=fn;
+  }
+  conn('show_prompt', onPrompt);
+  conn('show_message', onMessage);
+  conn('authentication_complete', onAuthComplete);
+  conn('autologin_timer_expired', function(){});
+  populate(); refreshAvatar(); beginAuth();
+  return true;
+}
+window.addEventListener('GreeterReady', wireLightdm);
+document.addEventListener('DOMContentLoaded', function(){ if(!wireLightdm()){ populate(); refreshAvatar(); } });
+
+// submit the password
+$('form').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  var pw=$('password').value;
+  if(!window.lightdm){ setMsg('(preview: greeter not running)'); return; }
+  try{
+    if(lightdm.in_authentication){ lightdm.respond(pw); }
+    else { beginAuth(); setTimeout(function(){ try{lightdm.respond(pw);}catch(e){} }, 140); }
+  }catch(e){ setMsg('Login error'); }
+});
+$('user').addEventListener('change', function(){ refreshAvatar(); beginAuth(); });
+
+$('btnSleep').onclick   = ()=>{ try{lightdm.suspend();}catch(e){} };
+$('btnRestart').onclick = ()=>{ try{lightdm.restart();}catch(e){} };
+$('btnShutdown').onclick= ()=>{ try{lightdm.shutdown();}catch(e){} };
+</script>
+</body>
+</html>
