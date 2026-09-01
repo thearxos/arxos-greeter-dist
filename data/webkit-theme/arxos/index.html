@@ -39,10 +39,21 @@ body{
 .topbar .host{letter-spacing:.06em}
 .topbar .host b{color:var(--fg)}
 #clock{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
-.topbar .right{display:flex;align-items:center;gap:14px}
-.iconbtn{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;padding:4px 6px;border-radius:8px;transition:.2s}
-.iconbtn:hover{color:var(--accent);background:rgba(255,255,255,.06)}
-select.sess{background:rgba(255,255,255,.05);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-family:inherit;font-size:.8rem}
+.topbar .right{display:flex;align-items:center;gap:18px}
+.segwrap{display:flex;align-items:center;gap:9px}
+.seglabel{font-size:.64rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.4);user-select:none}
+.sessions{display:flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.045);backdrop-filter:blur(8px)}
+.sessions .pill{border:0;background:transparent;color:var(--muted);font-family:inherit;font-size:.76rem;letter-spacing:.01em;padding:6px 13px;border-radius:9px;cursor:pointer;transition:.18s;white-space:nowrap}
+.sessions .pill:hover{color:var(--fg)}
+.sessions .pill.active{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(232,112,42,.42)}
+.sessions.single{background:transparent;border-color:transparent;padding:3px 2px}
+.sessions.single .pill{cursor:default;color:var(--fg)}
+.sessions.single .pill.active{background:transparent;box-shadow:none;color:var(--fg)}
+.power{display:flex;align-items:center;gap:3px}
+.pw{width:34px;height:34px;display:grid;place-items:center;background:none;border:0;color:var(--muted);border-radius:10px;cursor:pointer;transition:.18s}
+.pw svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pw:hover{color:var(--accent);background:rgba(255,255,255,.06)}
+#btnShutdown:hover{color:#ff5c5c;background:rgba(255,92,92,.10)}
 
 /* center login */
 .stage{position:fixed;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px}
@@ -51,12 +62,31 @@ select.sess{background:rgba(255,255,255,.05);color:var(--fg);border:1px solid va
 .brand .tag{margin-top:8px;font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--muted)}
 .card{width:min(90vw,360px);background:var(--card);border:1px solid rgba(232,112,42,.32);border-radius:18px;
   padding:24px;backdrop-filter:blur(14px);box-shadow:0 30px 80px rgba(0,0,0,.5)}
-.who{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.who .av{width:44px;height:44px;border-radius:50%;background:var(--accent-soft);border:1px solid rgba(232,112,42,.4);display:grid;place-items:center;color:var(--accent);font-weight:600;font-size:1.1rem}
-#userWrap{flex:1}
-#userLabel{font-size:.95rem;font-weight:600}
-#user{width:100%;margin-top:2px;background:transparent;color:var(--muted);border:0;font-family:inherit;font-size:.8rem;outline:none;cursor:pointer}
-#user option{color:#111}
+.who{position:relative;display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:6px;border-radius:14px;transition:.18s}
+.who.multi{cursor:pointer}
+.who.multi:hover{background:rgba(255,255,255,.04)}
+.who .av{width:44px;height:44px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;color:#fff;font-weight:700;font-size:1.15rem;
+  background:radial-gradient(120% 120% at 30% 20%,rgba(232,112,42,.92),rgba(210,97,31,.55) 55%,rgba(232,112,42,.16));
+  border:1px solid rgba(232,112,42,.55);box-shadow:0 6px 18px rgba(232,112,42,.28),inset 0 1px 0 rgba(255,255,255,.25)}
+#userWrap{flex:1;min-width:0}
+#userLabel{font-size:.98rem;font-weight:600;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:linear-gradient(90deg,#fff,#ffd9c2 55%,var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.usersub{margin-top:1px;font-size:.72rem;letter-spacing:.02em;color:rgba(255,255,255,.42)}
+.chev{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:.22s;opacity:0}
+.who.multi .chev{opacity:1}
+.who.open .chev{transform:rotate(180deg);stroke:var(--accent)}
+.usermenu{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:20;display:none;
+  background:rgba(16,16,20,.98);border:1px solid rgba(232,112,42,.3);border-radius:14px;padding:6px;
+  box-shadow:0 24px 60px rgba(0,0,0,.6);backdrop-filter:blur(16px);max-height:220px;overflow:auto}
+.who.open .usermenu{display:block;animation:menuin .16s ease}
+@keyframes menuin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.uitem{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:.14s}
+.uitem:hover{background:rgba(255,255,255,.06)}
+.uitem.active{background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(232,112,42,.4)}
+.uitem .uav{width:32px;height:32px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-weight:700;font-size:.9rem;color:#fff;
+  background:radial-gradient(120% 120% at 30% 20%,rgba(232,112,42,.85),rgba(210,97,31,.5) 55%,rgba(232,112,42,.15));border:1px solid rgba(232,112,42,.45)}
+.uitem .uname{font-size:.92rem;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uitem.active .uname{color:var(--accent);font-weight:600}
 .field{position:relative}
 #password{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;color:var(--fg);
   padding:12px 46px 12px 14px;font-family:inherit;font-size:.95rem;outline:none;transition:.2s}
@@ -67,6 +97,14 @@ select.sess{background:rgba(255,255,255,.05);color:var(--fg);border:1px solid va
 #go:hover{background:var(--accent-hi)}
 #msg{min-height:18px;margin-top:12px;font-size:.8rem;color:var(--accent);text-align:center}
 .hint{margin-top:2px;font-size:.72rem;color:rgba(255,255,255,.35);text-align:center}
+.greet{font-size:.86rem;letter-spacing:.01em;color:var(--muted);text-align:center;margin-top:-8px}
+.greet b{color:var(--fg);font-weight:600}
+#msg.error{color:#ff6b6b}
+#msg.ok{color:#5fd08a}
+.card.err #password{border-color:#ff5c5c;box-shadow:0 0 0 2px rgba(255,92,92,.28)}
+.card.err #go{background:#ff5c5c}
+.card.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97)}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-9px)}40%,60%{transform:translateX(9px)}}
 </style>
 </head>
 <body>
@@ -77,10 +115,15 @@ select.sess{background:rgba(255,255,255,.05);color:var(--fg);border:1px solid va
   <div class="host">ARXOS on <b id="host">arxos</b></div>
   <div id="clock">00:00</div>
   <div class="right">
-    <select id="session" class="sess" title="Session"></select>
-    <button class="iconbtn" id="btnSleep" title="Suspend">Suspend</button>
-    <button class="iconbtn" id="btnRestart" title="Restart">Restart</button>
-    <button class="iconbtn" id="btnShutdown" title="Shut down">Shut down</button>
+    <div class="segwrap" title="Choose session">
+      <span class="seglabel">Session</span>
+      <div id="sessions" class="sessions"></div>
+    </div>
+    <div class="power">
+      <button class="pw" id="btnSleep" title="Suspend" aria-label="Suspend"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg></button>
+      <button class="pw" id="btnRestart" title="Restart" aria-label="Restart"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5"/></svg></button>
+      <button class="pw" id="btnShutdown" title="Shut down" aria-label="Shut down"><svg viewBox="0 0 24 24"><path d="M12 4v8M7.5 6.5a7 7 0 1 0 9 0"/></svg></button>
+    </div>
   </div>
 </div>
 
@@ -89,13 +132,16 @@ select.sess{background:rgba(255,255,255,.05);color:var(--fg);border:1px solid va
     <div class="name">ARXOS</div>
     <div class="tag">a citadel, armed</div>
   </div>
+  <div class="greet" id="greet"></div>
   <form class="card" id="form" autocomplete="off">
-    <div class="who">
+    <div class="who" id="userPicker">
       <div class="av" id="avatar">A</div>
       <div id="userWrap">
         <div id="userLabel">Sign in</div>
-        <select id="user"></select>
+        <div id="userSub" class="usersub">Enter password</div>
       </div>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      <div id="userMenu" class="usermenu"></div>
     </div>
     <div class="field">
       <input id="password" type="password" placeholder="Password" autofocus>
@@ -113,24 +159,78 @@ function tick(){
   document.getElementById('clock').textContent = p(d.getHours())+':'+p(d.getMinutes())+
     '   '+d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
 }
-setInterval(tick,1000); tick();
+setInterval(function(){ tick(); greeting(); },1000); tick();
 
 var $=id=>document.getElementById(id);
-function setMsg(t){ $('msg').textContent=t||''; }
-function selectedUser(){ return $('user').value; }
-function selectedSession(){ return $('session').value || (window.lightdm && lightdm.default_session) || 'default'; }
-function refreshAvatar(){ var u=selectedUser()||'A'; $('avatar').textContent=u.charAt(0).toUpperCase(); $('userLabel').textContent=u; }
+function setMsg(t,kind){ var m=$('msg'); if(!m) return; m.textContent=t||''; m.className=kind||''; }
+function greeting(){
+  var h=new Date().getHours();
+  var g = h<5?'Good night':h<12?'Good morning':h<17?'Good afternoon':h<21?'Good evening':'Good night';
+  var el=$('greet'); if(el && !el.dataset.locked) el.innerHTML=g+'. Please sign in.';
+}
+function shake(){
+  var c=document.querySelector('.card'); if(!c) return;
+  c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake','err');
+  setTimeout(function(){ c.classList.remove('shake'); }, 520);
+  setTimeout(function(){ c.classList.remove('err'); }, 1400);
+}
+var curUser=null;
+function selectedUser(){ return curUser; }
+function initials(n){ return (n||'A').charAt(0).toUpperCase(); }
+function setUser(name){
+  curUser=name;
+  $('userLabel').textContent=name||'Sign in';
+  $('avatar').textContent=initials(name);
+  var m=$('userMenu'); if(m){ [].forEach.call(m.children,function(c){ c.classList.toggle('active', c.dataset.user===name); }); }
+}
+function buildUsers(list){
+  var menu=$('userMenu'), who=$('userPicker'); if(!menu||!who) return;
+  menu.innerHTML='';
+  var multi=list.length>1;
+  who.classList.toggle('multi', multi);
+  $('userSub').textContent = multi ? 'Switch account' : 'Enter password';
+  list.forEach(function(u){
+    var name=u.username, disp=u.display_name||u.username;
+    var it=document.createElement('div'); it.className='uitem'; it.dataset.user=name;
+    var av=document.createElement('div'); av.className='uav'; av.textContent=initials(name);
+    var nm=document.createElement('div'); nm.className='uname'; nm.textContent=disp;
+    it.appendChild(av); it.appendChild(nm);
+    it.addEventListener('click', function(ev){ ev.stopPropagation(); setUser(name); closeUserMenu(); $('password').focus(); beginAuth(); });
+    menu.appendChild(it);
+  });
+  setUser((list[0]||{}).username || 'arxos');
+}
+function closeUserMenu(){ $('userPicker').classList.remove('open'); }
+function toggleUserMenu(){ var p=$('userPicker'); if(p.classList.contains('multi')) p.classList.toggle('open'); }
+var curSession=null;
+function validSessions(){ var ss=(window.lightdm&&lightdm.sessions)||[]; var k=ss.map(x=>x.key||x.name).filter(Boolean); return k.length?k:['xfce']; }
+function prettySession(k){ return String(k).replace(/[-_]/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}); }
+function sessionName(k){ var m={}; ((window.lightdm&&lightdm.sessions)||[]).forEach(function(s){ m[s.key||s.name]=s.name; }); return m[k]||prettySession(k); }
+function selectedSession(){ var k=validSessions(); if(curSession&&k.indexOf(curSession)>=0) return curSession; var d=window.lightdm&&lightdm.default_session; if(d&&k.indexOf(d)>=0) return d; return k[0]; }
+function buildSessions(){
+  var keys=validSessions(), box=$('sessions'); if(!box) return;
+  box.innerHTML=''; box.classList.toggle('single', keys.length<=1);
+  var sel=selectedSession(); curSession=sel;
+  keys.forEach(function(k){
+    var b=document.createElement('button');
+    b.type='button'; b.dataset.key=k; b.className='pill'+(k===sel?' active':''); b.textContent=sessionName(k);
+    b.addEventListener('click', function(){
+      if(keys.length<=1) return;
+      curSession=k;
+      [].forEach.call(box.children,function(c){ c.classList.toggle('active', c.dataset.key===k); });
+    });
+    box.appendChild(b);
+  });
+}
+function refreshAvatar(){ setUser(curUser); }
 
 function populate(){
-  if(!window.lightdm){ $('user').innerHTML='<option>arxos</option>'; return; }
+  greeting();
+  if(!window.lightdm){ buildUsers([{username:'arxos'}]); buildSessions(); return; }
   try{ $('host').textContent = lightdm.hostname || 'arxos'; }catch(e){}
   var us=(lightdm.users||[]);
-  $('user').innerHTML = us.length
-    ? us.map(u=>'<option value="'+u.username+'">'+(u.display_name||u.username)+'</option>').join('')
-    : '<option value="'+(lightdm.authentication_user||'arxos')+'">'+(lightdm.authentication_user||'arxos')+'</option>';
-  var ss=(lightdm.sessions||[]);
-  $('session').innerHTML = ss.map(s=>'<option value="'+(s.key||s.name)+'">'+s.name+'</option>').join('');
-  if(lightdm.default_session) $('session').value=lightdm.default_session;
+  buildUsers(us.length ? us : [{username:(lightdm.authentication_user||'arxos')}]);
+  buildSessions();
 }
 
 // ---- auth flow ----
@@ -143,12 +243,15 @@ function onPrompt(text,type){ $('password').focus(); }
 function onMessage(text,type){ if(text) setMsg(text); }
 function onAuthComplete(){
   if(window.lightdm && lightdm.is_authenticated){
-    setMsg('Welcome');
+    setMsg('Welcome back'+(curUser?', '+curUser:''), 'ok');
+    var g=$('greet'); if(g){ g.dataset.locked='1'; g.innerHTML='Welcome back, <b>'+(curUser||'')+'</b>'; }
     try{ lightdm.start_session(selectedSession()); }catch(e){}
   } else {
-    setMsg('Incorrect password');
-    $('password').value=''; $('password').focus();
-    beginAuth();
+    shake();
+    $('password').value='';
+    beginAuth();                                          // restarts auth (clears msg internally)
+    setMsg('Incorrect password. Try again.','error');     // set AFTER beginAuth so it persists
+    $('password').focus();
   }
 }
 
@@ -180,7 +283,8 @@ $('form').addEventListener('submit', function(ev){
     else { beginAuth(); setTimeout(function(){ try{lightdm.respond(pw);}catch(e){} }, 140); }
   }catch(e){ setMsg('Login error'); }
 });
-$('user').addEventListener('change', function(){ refreshAvatar(); beginAuth(); });
+$('userPicker').addEventListener('click', toggleUserMenu);
+document.addEventListener('click', function(e){ var p=$('userPicker'); if(p && !p.contains(e.target)) closeUserMenu(); });
 
 $('btnSleep').onclick   = ()=>{ try{lightdm.suspend();}catch(e){} };
 $('btnRestart').onclick = ()=>{ try{lightdm.restart();}catch(e){} };

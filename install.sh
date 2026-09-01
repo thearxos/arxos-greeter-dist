@@ -52,7 +52,7 @@ fi
 
 log "make web-greeter the LightDM default (no autologin on the shipped system)"
 install -d /etc/lightdm/lightdm.conf.d
-printf '[Seat:*]\ngreeter-session=web-greeter\n' > /etc/lightdm/lightdm.conf.d/10-arxos.conf
+printf '[Seat:*]\ngreeter-session=web-greeter\nuser-session=xfce\n' > /etc/lightdm/lightdm.conf.d/10-arxos.conf
 
 log "lock screen == this greeter, for every user (system autostart + skel)"
 install -Dm644 "$HERE/data/autostart/light-locker.desktop" /etc/xdg/autostart/light-locker.desktop
