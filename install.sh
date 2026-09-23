@@ -61,5 +61,15 @@ install -Dm644 "$HERE/data/autostart/light-locker.desktop" /etc/skel/.config/aut
 log "enable LightDM as the display manager"
 systemctl enable lightdm
 
+# The command that applies it. An update runs this installer as root, and restarting LightDM from
+# inside an update would close the desktop somebody is working in. So the new greeter is left on
+# disk and the person is handed a command to run when it suits them, rather than a systemctl line
+# to retype. It checks the greeter is actually configured before it closes the session, because a
+# restart into a greeter that will not start is a black screen with no way back.
+log "install the apply command"
+install -Dm755 "$HERE/data/arxos-greeter-apply" /usr/bin/arxos-greeter-apply
+
 echo ">> arxos-greeter installed. web-greeter shows the ARXOS HTML login, the lock screen, and the default login."
-echo ">> apply now with: systemctl restart lightdm  (this ends the current graphical session)"
+echo ">> it is on disk now and applies at the next reboot."
+echo ">> to apply it without rebooting:  sudo arxos-greeter-apply    (this closes the current session)"
+echo ">> to see what is configured:      arxos-greeter-apply --status"

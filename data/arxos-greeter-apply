@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Apply the ARXOS greeter to the running system.
+#
+# Installing or updating the greeter writes the theme and the LightDM configuration, but it
+# deliberately does NOT restart LightDM: doing that from inside an update would close the desktop
+# the person is working in, without warning, possibly mid-task. So the update leaves the new
+# greeter on disk and hands over this command, to be run when it suits.
+#
+# What it costs is stated before anything happens, because restarting LightDM ends the graphical
+# session: every open window in it closes.
+set -euo pipefail
+
+YES=no
+for a in "$@"; do
+  case "$a" in
+    -y|--yes) YES=yes ;;
+    --status) YES=status ;;
+    -h|--help)
+      sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
+      echo
+      echo "usage: arxos-greeter-apply [--yes] [--status]"
+      echo "  --yes     do not ask; assume the session may be closed"
+      echo "  --status  report what is configured and what is running, change nothing"
+      exit 0 ;;
+    *) echo "unknown option: $a" >&2; exit 2 ;;
+  esac
+done
+
+# A missing file is the normal "not set up yet" answer, not an error. Without the guard, sed's
+# exit status travels through the pipe (pipefail) into the assignment and set -e kills the script
+# before it can report that nothing is configured, which is the one case it exists to explain.
+cfg_theme() {
+  [ -f /etc/lightdm/web-greeter.toml ] || return 0
+  sed -n 's/^theme *= *"\(.*\)"/\1/p' /etc/lightdm/web-greeter.toml | head -1
+}
+cfg_greeter() {
+  [ -f /etc/lightdm/lightdm.conf.d/10-arxos.conf ] || return 0
+  sed -n 's/^greeter-session *= *//p' /etc/lightdm/lightdm.conf.d/10-arxos.conf | head -1
+}
+
+# What is on disk, which is what a restart would pick up.
+THEME=$(cfg_theme); GREETER=$(cfg_greeter)
+printf '  configured greeter : %s\n' "${GREETER:-none}"
+printf '  configured theme   : %s\n' "${THEME:-none}"
+printf '  lightdm            : %s\n' "$(systemctl is-active lightdm 2>/dev/null || echo inactive)"
+[ "$YES" = status ] && exit 0
+
+# Refuse rather than restart into a login screen that is not configured: a failed greeter leaves
+# a black screen and no way back in from the desktop that is about to close.
+[ "$GREETER" = web-greeter ] || { echo "!! web-greeter is not configured as the LightDM greeter." >&2
+  echo "   Run the arxos-greeter installer first; nothing was restarted." >&2; exit 1; }
+[ -d /usr/share/web-greeter/themes/arxos ] || { echo "!! the arxos theme is not installed; nothing was restarted." >&2; exit 1; }
+command -v web-greeter >/dev/null 2>&1 || pacman -Q web-greeter >/dev/null 2>&1 || {
+  echo "!! the web-greeter engine is not installed; nothing was restarted." >&2; exit 1; }
+
+[ "$(id -u)" = 0 ] || { echo "this restarts LightDM, so it needs root: sudo arxos-greeter-apply" >&2; exit 1; }
+
+if [ "$YES" != yes ]; then
+  echo
+  echo "  Restarting LightDM ends the current graphical session."
+  echo "  Every window open in it closes, and you log back in at the new greeter."
+  echo "  Nothing else on the system is touched; work already saved to disk is safe."
+  echo
+  printf "  Restart LightDM now? [y/N]: "
+  read -r reply </dev/tty || reply=n
+  case "$reply" in y|Y|yes|YES) ;; *) echo "  left alone; it applies at the next reboot."; exit 0 ;; esac
+fi
+
+echo ">> restarting lightdm"
+systemctl restart lightdm

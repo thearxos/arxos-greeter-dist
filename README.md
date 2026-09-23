@@ -47,3 +47,9 @@ The installer is idempotent. You can run it again with no harm.
 | `data/webkit-theme/arxos/index.html` | The ARXOS HTML greeter |
 | `data/webkit-theme/arxos/index.yml` | web-greeter theme metadata |
 | `data/autostart/light-locker.desktop` | Locks the session to the greeter |
+
+---
+
+<div align="center">
+<sub><b>arxos-greeter</b> is part of the <b>ArxOS</b> project, built by <b>Stingray Labs</b>.</sub>
+</div>
