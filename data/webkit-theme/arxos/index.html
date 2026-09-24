@@ -528,6 +528,43 @@ document.addEventListener('click', function(e){ var p=$('userPicker'); if(p && !
 $('btnSleep').onclick   = ()=>{ try{lightdm.suspend();}catch(e){} };
 $('btnRestart').onclick = ()=>{ try{lightdm.restart();}catch(e){} };
 $('btnShutdown').onclick= ()=>{ try{lightdm.shutdown();}catch(e){} };
+
+// Login and lock screen background. The Control Center (Wallpaper > Lock screen) writes
+// /usr/share/backgrounds/arxos-greeter, outside this theme so a greeter update keeps it.
+// It holds either the chosen image, shown until changed, or a "mode-slideshow-<seconds>"
+// marker, which rotates the system wallpapers on the desktop slideshow's interval. With
+// neither, the theme keeps its own bg.png.
+(function(){
+  var OVER='radial-gradient(60% 45% at 50% 8%,rgba(232,112,42,.14),transparent 60%),'+
+           'radial-gradient(70% 55% at 50% 120%,rgba(232,112,42,.10),transparent 66%)';
+  var IMG=/\.(jpe?g|png|webp|bmp|gif)$/i;
+  function show(p){ document.body.style.backgroundImage=OVER+',url("'+encodeURI(p)+'")'; }
+  function list(dir,cb){ try{ theme_utils.dirlist(dir,false,function(r){ cb(r||[]); }); }catch(e){ cb([]); } }
+  function start(){
+    if(!window.theme_utils) return;
+    var b=window.greeter_config&&greeter_config.branding;
+    var root=(b&&b.background_images_dir)||'/usr/share/backgrounds';
+    list(root+'/arxos-greeter',function(items){
+      var every=0, still='';
+      items.forEach(function(p){
+        var n=p.replace(/^.*\//,''), m=n.match(/^mode-slideshow-(\d+)$/);
+        if(m) every=+m[1]; else if(IMG.test(n)) still=p;
+      });
+      if(every){
+        list(root+'/arxos',function(all){
+          var imgs=all.filter(function(p){ return IMG.test(p); }).sort();
+          if(!imgs.length) return;
+          var ms=Math.max(60,every)*1000, last='';
+          // The picture follows the clock, so the login and every lock show the same
+          // turn of the slideshow without the greeter having to remember anything.
+          function turn(){ var p=imgs[Math.floor(Date.now()/ms)%imgs.length]; if(p!==last){ last=p; show(p); } }
+          turn(); setInterval(turn,15000);
+        });
+      } else if(still){ show(still); }
+    });
+  }
+  if(window.theme_utils) start(); else window.addEventListener('GreeterReady',start);
+})();
 </script>
 </body>
 </html>
